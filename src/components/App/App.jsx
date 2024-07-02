@@ -1,164 +1,47 @@
-import Description from "../Description/Description";
-import Options from "../Options/Options";
-import Feedback from "../Feedback/Feedback";
+import ContactForm from "../ContactForm/ContactForm";
+import SearchBox from "../SearchBox/SearchBox";
+import ContactList from "../ContactList/ContactList";
 import { useState, useEffect } from "react";
-import Notification from "../../Notifications/Notifications";
+import styles from "./App.module.css";
 
 export default function App() {
-  const [good, setGood] = useState(() => {
-    const savedClicks = JSON.parse(
-      window.localStorage.getItem("saved-good-clicks")
-    );
-    return savedClicks !== null ? savedClicks : 0;
+  const [contacts, setContacts] = useState(() => {
+    const storedContacts = localStorage.getItem("contacts");
+    return storedContacts ? JSON.parse(storedContacts) : [];
   });
-
-  const [neutral, setNeutral] = useState(() => {
-    const savedClicks = JSON.parse(
-      window.localStorage.getItem("saved-neutral-clicks")
-    );
-    return savedClicks !== null ? savedClicks : 0;
-  });
-
-  const [bad, setBad] = useState(() => {
-    const savedClicks = JSON.parse(
-      window.localStorage.getItem("saved-bad-clicks")
-    );
-    return savedClicks !== null ? savedClicks : 0;
-  });
+  const [filter, setFilter] = useState("");
 
   useEffect(() => {
-    window.localStorage.setItem("saved-good-clicks", JSON.stringify(good));
-    window.localStorage.setItem(
-      "saved-neutral-clicks",
-      JSON.stringify(neutral)
+    localStorage.setItem("contacts", JSON.stringify(contacts));
+  }, [contacts]);
+
+  const addContact = (newContact) => {
+    setContacts((prevContacts) => [...prevContacts, newContact]);
+  };
+
+  const deleteContact = (contactId) => {
+    setContacts((prevContacts) =>
+      prevContacts.filter((contact) => contact.id !== contactId)
     );
-    window.localStorage.setItem("saved-bad-clicks", JSON.stringify(bad));
-  }, [good, neutral, bad]);
-
-  const updateFeedback = (feedbackType) => {
-    if (feedbackType === "good") {
-      setGood(good + 1);
-    } else if (feedbackType === "neutral") {
-      setNeutral(neutral + 1);
-    } else if (feedbackType === "bad") {
-      setBad(bad + 1);
-    }
   };
 
-  const resetFeedback = () => {
-    setGood(0);
-    setNeutral(0);
-    setBad(0);
+  const handleFilterChange = (newFilter) => {
+    setFilter(newFilter);
   };
 
-  const totalFeedback = good + neutral + bad;
-  const positiveFeedbackPercentage =
-    totalFeedback === 0 ? 0 : Math.round((good / totalFeedback) * 100);
+  const filteredContacts = contacts.filter((contact) =>
+    contact.name.toLowerCase().includes(filter.toLowerCase())
+  );
 
   return (
-    <>
-      <Description />
-      <Options
-        updateFeedback={updateFeedback}
-        resetFeedback={resetFeedback}
-        totalFeedback={totalFeedback}
+    <div className={styles.container}>
+      <h1 className={styles.header}>Phonebook</h1>
+      <ContactForm addContact={addContact} />
+      <SearchBox filter={filter} onFilterChange={handleFilterChange} />
+      <ContactList
+        contacts={filteredContacts}
+        onDeleteContact={deleteContact}
       />
-      {totalFeedback === 0 ? (
-        <Notification message="No Feedback yet" />
-      ) : (
-        <Feedback
-          good={good}
-          neutral={neutral}
-          bad={bad}
-          total={totalFeedback}
-          positivePercentage={positiveFeedbackPercentage}
-        />
-      )}
-    </>
+    </div>
   );
 }
-
-// export default function App() {
-//   const [good, setGood] = useState(() => {
-//     const savedClicks = JSON.parse(
-//       window.localStorage.getItem("saved-good-clicks")
-//     );
-//     if (savedClicks !== null) {
-//       return savedClicks;
-//     }
-//     return 0;
-//   });
-//   const [neutral, setNeutral] = useState(() => {
-//     const savedClicks = JSON.parse(
-//       window.localStorage.getItem("saved-neutral-clicks")
-//     );
-//     if (savedClicks !== null) {
-//       return savedClicks;
-//     }
-//     return 0;
-//   });
-//   const [bad, setBad] = useState(() => {
-//     const savedClicks = JSON.parse(
-//       window.localStorage.getItem("saved-bad-clicks")
-//     );
-//     if (savedClicks !== null) {
-//       return savedClicks;
-//     }
-//     return 0;
-//   });
-
-//   useEffect(() => {
-//     window.localStorage.setItem("saved-good-clicks", JSON.stringify(good));
-//     window.localStorage.setItem(
-//       "saved-neutral-clicks",
-//       JSON.stringify(neutral)
-//     );
-//     window.localStorage.setItem("saved-bad-clicks", JSON.stringify(bad));
-//   }, [good, neutral, bad]);
-
-//   const updateFeedback = (feedbackType) => {
-//     if (feedbackType === "good") {
-//       setGood(good + 1);
-//     } else if (feedbackType === "neutral") {
-//       setNeutral(neutral + 1);
-//     } else if (feedbackType === "bad") {
-//       setBad(bad + 1);
-//     }
-//   };
-
-//   const resetFeedback = () => {
-//     setGood(0);
-//     setNeutral(0);
-//     setBad(0);
-//   };
-
-//   const totalFeedback = good + neutral + bad;
-//   const positiveFeedbackPercentage = Math.round((good / totalFeedback) * 100);
-
-//   return (
-//     <>
-//       <Description />
-//       <Options text="Good" updateFeedback={() => updateFeedback("good")} />
-//       <Options
-//         text="Neutral"
-//         updateFeedback={() => updateFeedback("neutral")}
-//       />
-//       <Options text="Bad" updateFeedback={() => updateFeedback("bad")} />
-//       {totalFeedback === 0 && <p>No Feedback yet</p>}
-//       {totalFeedback > 0 && (
-//         <>
-//           <Options
-//             text="Reset"
-//             resetFeedback={resetFeedback}
-//             totalFeedback={totalFeedback}
-//           />
-//           <Feedback text="Good" value={good} />
-//           <Feedback text="Neutral" value={neutral} />
-//           <Feedback text="Bad" value={bad} />
-//           <p>Total feedbacks: {totalFeedback}</p>
-//           <p>Positive feedback percentage: {positiveFeedbackPercentage}%</p>
-//         </>
-//       )}
-//     </>
-//   );
-// }
